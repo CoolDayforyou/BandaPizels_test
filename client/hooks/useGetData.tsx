@@ -1,11 +1,13 @@
-import client from "@/api/client";
-import { checkToken } from "@/lib/checkToken";
-import { DataType, ProductType } from "@/types/Types";
 import { useEffect, useState } from "react";
+import { protectedRoute } from "@/api/client";
+import { DataType, ProductType } from "@/types/Types";
 import { useErrorHandler } from "./useErrorHandler";
+import { useAuth } from "./useAuth";
+import { getToken } from "@/utils/storage";
 
 const useGetProducts = () => {
-  const [isLogged, setIsLogged] = useState(false);
+  const { isLogged } = useAuth();
+
   const [isLoading, setIsLoading] = useState(true);
   const [productsArray, setProductsArray] = useState<ProductType[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | undefined>(
@@ -14,39 +16,42 @@ const useGetProducts = () => {
 
   useEffect(() => {
     const getProductsData = async () => {
+      setIsLoading(true);
+      const token = await getToken();
+      if (!token) {
+        setProductsArray([]);
+        setErrorMessage("You are not authorized!");
+        setIsLoading(false);
+
+        return;
+      }
+
       try {
-        const token = await checkToken();
-        if (!token) {
-          return;
-        }
-
-        setIsLogged(true);
-
-        const { data } = await client.get<DataType<ProductType[], "products">>(
-          "/products",
-          {
-            headers: {
-              authorization: `Bearer ${token}`,
-            },
+        const { data } = await protectedRoute.get<
+          DataType<ProductType[], "products">
+        >("/products", {
+          headers: {
+            authorization: `Bearer ${token}`,
           },
-        );
+        });
+
         setProductsArray(data.products);
       } catch (error) {
-        const errorMessage = useErrorHandler(error);
-        setErrorMessage(errorMessage);
+        setErrorMessage(useErrorHandler(error));
       }
 
       setIsLoading(false);
     };
 
     getProductsData();
-  }, []);
+  }, [isLogged]);
 
   return { isLoading, isLogged, productsArray, errorMessage };
 };
 
 const useGetSingleProduct = (productId: string) => {
-  const [isLogged, setIsLogged] = useState(false);
+  const { isLogged } = useAuth();
+
   const [isLoading, setIsLoading] = useState(true);
   const [productData, setProductData] = useState<ProductType | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | undefined>(
@@ -56,20 +61,22 @@ const useGetSingleProduct = (productId: string) => {
   useEffect(() => {
     const getProductData = async () => {
       try {
-        const token = await checkToken();
+        const token = await getToken();
         if (!token) {
+          setIsLoading(false);
+          setProductData(null);
+          setErrorMessage("You are not authorized!");
+
           return;
         }
 
-        setIsLogged(true);
-        const { data } = await client.get<DataType<ProductType, "product">>(
-          `/products/${productId}`,
-          {
-            headers: {
-              authorization: `Bearer ${token}`,
-            },
+        const { data } = await protectedRoute.get<
+          DataType<ProductType, "product">
+        >(`/products/${productId}`, {
+          headers: {
+            authorization: `Bearer ${token}`,
           },
-        );
+        });
         setProductData(data.product);
       } catch (error) {
         const errorMessage = useErrorHandler(error);
@@ -80,7 +87,7 @@ const useGetSingleProduct = (productId: string) => {
     };
 
     getProductData();
-  }, []);
+  }, [productId, isLogged]);
 
   return { isLoading, isLogged, productData, errorMessage };
 };

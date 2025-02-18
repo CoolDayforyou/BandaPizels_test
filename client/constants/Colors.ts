@@ -1,7 +1,8 @@
 export const Colors = {
-  backgroundColor: "#232320",
-  accentColor: "#FFD600",
-  touchableColor: "#3D3C37",
-  textInputColor: "#2F2F2D",
-  secondaryColor: "rgba(255 255 255 / 0.5)",
+  text: "#FFFFFF",
+  background: "#232320",
+  accent: "#FFD600",
+  touchable: "#3D3C37",
+  textInput: "#2F2F2D",
+  secondary: "rgba(255 255 255 / 0.5)",
 };

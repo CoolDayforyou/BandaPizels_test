@@ -3,7 +3,9 @@ import React from "react";
 import { useRouter } from "expo-router";
 
 import { ProductType } from "@/types/Types";
-import { Colors } from "@/constants/Colors";
+import { Fonts } from "@/constants/Fonts";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { Routes } from "@/constants/Routes";
 
 type Props = {
   product: ProductType;
@@ -11,13 +13,23 @@ type Props = {
 
 const ProductCard = ({ product }: Props) => {
   const router = useRouter();
+  const backgroundColor = useThemeColor("touchable");
+  const textColor = useThemeColor("text");
 
   const handlePress = () => {
-    router.push(`/products/${product.id}`);
+    router.push(`${Routes.PRODUCTS}/${product.id}`);
   };
 
   return (
-    <TouchableOpacity style={styles.cardContainer} onPress={handlePress}>
+    <TouchableOpacity
+      style={[
+        styles.cardContainer,
+        {
+          backgroundColor,
+        },
+      ]}
+      onPress={handlePress}
+    >
       <Image
         source={{
           uri: product.image,
@@ -25,11 +37,28 @@ const ProductCard = ({ product }: Props) => {
         style={styles.image}
       />
 
-      <Text numberOfLines={1} style={styles.titleText}>
+      <Text
+        numberOfLines={1}
+        style={[
+          styles.titleText,
+          {
+            color: textColor,
+          },
+        ]}
+      >
         {product.title}
       </Text>
 
-      <Text style={styles.price}>${product.price.toFixed(2)}</Text>
+      <Text
+        style={[
+          styles.price,
+          {
+            color: textColor,
+          },
+        ]}
+      >
+        ${product.price.toFixed(2)}
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -43,7 +72,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingBottom: 16,
     borderRadius: 8,
-    backgroundColor: Colors.touchableColor,
     overflow: "hidden",
   },
   image: {
@@ -53,14 +81,12 @@ const styles = StyleSheet.create({
   titleText: {
     marginHorizontal: 4,
     marginVertical: 8,
-    color: "#FFF",
-    fontFamily: "Alata",
+    fontFamily: Fonts.Alata,
     fontSize: 12,
   },
   price: {
     marginHorizontal: 4,
-    color: "#FFF",
-    fontFamily: "Gabarito",
+    fontFamily: Fonts.Gabarito,
     fontSize: 12,
     fontWeight: "bold",
   },

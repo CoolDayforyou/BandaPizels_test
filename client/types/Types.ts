@@ -3,6 +3,13 @@ export type LoginType = {
   password: string;
 };
 
+export type AuthContextType = {
+  isLogged: boolean;
+  isLoading: boolean;
+  login: (token: string) => Promise<void>;
+  logout: () => Promise<void>;
+};
+
 type ResponseType = {
   success: boolean;
 };
@@ -16,13 +23,13 @@ export type DataType<T, Key extends string = "data"> = ResponseType & {
 };
 
 export type ProductType = {
-  category: string;
-  description: string;
   id: number;
-  image: string;
-  price: number;
-  rating: { count: number; rate: number };
   title: string;
+  price: number;
+  description: string;
+  category: string;
+  image: string;
+  rating: { count: number; rate: number };
 };
 
 type Status = {

@@ -1,9 +1,9 @@
-const express = require("express");
-const {
+import express from "express";
+import {
   getAllProductsController,
   getSingleProductsController,
-} = require("../controllers/productController");
-const checkToken = require("../middlewares/checkToken");
+} from "../controllers/productController";
+import checkToken from "../middlewares/checkToken";
 
 // ROUTER OBJ
 const router = express.Router();
@@ -13,4 +13,4 @@ const router = express.Router();
 router.get("/", checkToken, getAllProductsController);
 router.get("/:productId", checkToken, getSingleProductsController);
 
-module.exports = router;
+export default router;

@@ -8,10 +8,12 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-import { Colors } from "@/constants/Colors";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 const Loading = () => {
+  const backgroundColor = useThemeColor("background");
+  const borderColor = useThemeColor("accent");
+
   const rotation = useSharedValue(0);
 
   useEffect(() => {
@@ -29,8 +31,23 @@ const Loading = () => {
   }));
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Animated.View style={[styles.loader, animatedStyle]} />
+    <SafeAreaView
+      style={[
+        styles.container,
+        {
+          backgroundColor,
+        },
+      ]}
+    >
+      <Animated.View
+        style={[
+          styles.loader,
+          {
+            borderColor,
+          },
+          animatedStyle,
+        ]}
+      />
     </SafeAreaView>
   );
 };
@@ -42,12 +59,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: Colors.backgroundColor,
   },
   loader: {
     width: 100,
     height: 100,
-    borderColor: Colors.accentColor,
     borderRadius: "100%",
     borderWidth: 8,
     borderBottomWidth: 1,

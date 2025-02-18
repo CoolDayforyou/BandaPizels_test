@@ -6,15 +6,19 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { Colors } from "@/constants/Colors";
 import { useGetSingleProduct } from "@/hooks/useGetData";
-import { ProductType } from "@/types/Types";
 import Loading from "@/components/Loading";
 import { AntDesign } from "@expo/vector-icons";
+
+import NotFoundScreen from "./NotFoundScreen";
+import { Fonts } from "@/constants/Fonts";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { useAuth } from "@/hooks/useAuth";
+import { Routes } from "@/constants/Routes";
 
 type Props = {
   productId: string;
@@ -22,50 +26,56 @@ type Props = {
 
 const SingleProductScreen = ({ productId }: Props) => {
   const router = useRouter();
+  const backgroundColor = useThemeColor("background");
+  const primaryColor = useThemeColor("text");
+  const secondaryColor = useThemeColor("secondary");
+  const touchableColor = useThemeColor("touchable");
+  const accentColor = useThemeColor("accent");
 
-  const [errorMess, setErrorMess] = useState<string | undefined>(undefined);
-  const [product, setProduct] = useState<ProductType | null>(null);
-
-  const { isLoading, isLogged, productData, errorMessage } =
-    useGetSingleProduct(productId);
+  const {
+    isLoading,
+    isLogged,
+    productData: product,
+    errorMessage,
+  } = useGetSingleProduct(productId);
 
   useEffect(() => {
     if (!isLogged && !isLoading) {
-      return router.push("/");
+      return router.push(Routes.LOGIN);
     }
-
-    if (errorMessage) {
-      return setErrorMess(errorMessage);
-    }
-
-    setProduct(productData);
-  }, [isLoading, isLogged, productData, errorMessage]);
+  }, [isLoading, isLogged, product, errorMessage]);
 
   if (isLoading) {
     return <Loading />;
   }
-  if (!product) {
-    return (
-      <Text style={styles.error}>
-        {errorMess ? errorMess : "This product doesn't exist!"}
-      </Text>
-    );
+
+  if (errorMessage || !product) {
+    return <NotFoundScreen errorMessage={errorMessage} />;
   }
 
-  const handlePressReturn = () => {
-    return router.push("/products");
+  const handlePressReturn = async () => {
+    if (router.canGoBack()) {
+      return router.back();
+    }
+    return router.push(Routes.PRODUCTS);
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Return icon */}
-      <ScrollView style={styles.scrollContainer}>
+    <SafeAreaView
+      style={[
+        styles.container,
+        {
+          backgroundColor,
+        },
+      ]}
+    >
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContentContainer}
+      >
+        {/* Return icon */}
         <TouchableOpacity onPress={handlePressReturn}>
-          <AntDesign
-            name="leftcircle"
-            size={40}
-            color={Colors.touchableColor}
-          />
+          <AntDesign name="leftcircle" size={40} color={touchableColor} />
         </TouchableOpacity>
 
         <View style={styles.product}>
@@ -79,14 +89,41 @@ const SingleProductScreen = ({ productId }: Props) => {
 
           {/* Product name & price */}
           <View style={styles.mainInfo}>
-            <Text style={styles.titleText}>{product.title}</Text>
-            <Text style={styles.price}>${product.price.toFixed(2)}</Text>
+            <Text
+              style={[
+                styles.titleText,
+                {
+                  color: primaryColor,
+                },
+              ]}
+            >
+              {product.title}
+            </Text>
+            <Text
+              style={[
+                styles.price,
+                {
+                  color: accentColor,
+                },
+              ]}
+            >
+              ${product.price.toFixed(2)}
+            </Text>
           </View>
 
           {/* Product secondary info */}
           <View style={styles.description}>
             {/* Product description */}
-            <Text style={styles.infoText}>{product.description}</Text>
+            <Text
+              style={[
+                styles.infoText,
+                {
+                  color: secondaryColor,
+                },
+              ]}
+            >
+              {product.description}
+            </Text>
 
             {/* Shipping & Returns */}
             <View
@@ -94,8 +131,24 @@ const SingleProductScreen = ({ productId }: Props) => {
                 gap: 12,
               }}
             >
-              <Text style={styles.titleText}>Shipping & Returns</Text>
-              <Text style={styles.infoText}>
+              <Text
+                style={[
+                  styles.titleText,
+                  {
+                    color: primaryColor,
+                  },
+                ]}
+              >
+                Shipping & Returns
+              </Text>
+              <Text
+                style={[
+                  styles.infoText,
+                  {
+                    color: secondaryColor,
+                  },
+                ]}
+              >
                 Free standard shipping and free 60-day returns
               </Text>
             </View>
@@ -106,20 +159,37 @@ const SingleProductScreen = ({ productId }: Props) => {
                 gap: 16,
               }}
             >
-              <Text style={styles.titleText}>Reviews</Text>
+              <Text
+                style={[
+                  styles.titleText,
+                  {
+                    color: primaryColor,
+                  },
+                ]}
+              >
+                Reviews
+              </Text>
 
               <Text
                 style={[
                   styles.titleText,
                   {
                     fontSize: 24,
+                    color: primaryColor,
                   },
                 ]}
               >
                 {product.rating.rate} Ratings
               </Text>
 
-              <Text style={styles.infoText}>
+              <Text
+                style={[
+                  styles.infoText,
+                  {
+                    color: secondaryColor,
+                  },
+                ]}
+              >
                 {product.rating.count} Reviews
               </Text>
             </View>
@@ -136,14 +206,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 24,
-    backgroundColor: Colors.backgroundColor,
   },
   scrollContainer: {
+    flex: 1,
+  },
+  scrollContentContainer: {
     paddingVertical: 63,
     gap: 12,
-  },
-  error: {
-    color: "#FFF",
   },
   product: {
     flex: 1,
@@ -160,13 +229,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   titleText: {
-    color: "#FFF",
-    fontFamily: "Alata",
+    fontFamily: Fonts.Alata,
     fontSize: 16,
   },
   price: {
-    color: Colors.accentColor,
-    fontFamily: "Gabarito",
+    fontFamily: Fonts.Gabarito,
     fontWeight: "bold",
     fontSize: 16,
   },
@@ -174,7 +241,6 @@ const styles = StyleSheet.create({
     gap: 24,
   },
   infoText: {
-    color: Colors.secondaryColor,
     fontSize: 12,
     lineHeight: 12 * 1.6,
   },

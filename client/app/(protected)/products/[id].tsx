@@ -2,9 +2,9 @@ import { useLocalSearchParams } from "expo-router";
 import SingleProductScreen from "@/screens/SingleProductScreen";
 
 const Product = () => {
-  const { productId } = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
 
-  return <SingleProductScreen productId={productId} />;
+  return <SingleProductScreen productId={id} />;
 };
 
 export default Product;

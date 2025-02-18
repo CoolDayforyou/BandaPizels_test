@@ -4,7 +4,7 @@ import { AxiosError, isAxiosError } from "axios";
 export const useErrorHandler = (err: unknown) => {
   if (isAxiosError(err)) {
     const error: AxiosError<ErrorType> = err;
-    return error.response?.data.message;
+    return error.response?.data.message || error.message;
   }
   if (err instanceof Error) {
     return err.message;

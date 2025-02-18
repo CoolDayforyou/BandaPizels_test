@@ -1,7 +1,7 @@
-const { default: axios } = require("axios");
+import { default as axios } from "axios";
 
 const client = axios.create({
   baseURL: "https://fakestoreapi.com",
 });
 
-module.exports = client;
+export default client;

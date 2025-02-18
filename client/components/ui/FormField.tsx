@@ -7,7 +7,8 @@ import {
 } from "react-native";
 import React from "react";
 
-import { Colors } from "@/constants/Colors";
+import { Fonts } from "@/constants/Fonts";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 type Props = {
   placeholder: string;
@@ -16,12 +17,22 @@ type Props = {
 };
 
 const FormField = ({ placeholder, value, handleChange }: Props) => {
+  const textColor = useThemeColor("text");
+  const backgroundColor = useThemeColor("textInput");
+  const placeholderColor = useThemeColor("secondary");
+
   return (
     <View style={styles.formField}>
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            backgroundColor,
+            color: textColor,
+          },
+        ]}
         placeholder={placeholder}
-        placeholderTextColor={Colors.secondaryColor}
+        placeholderTextColor={placeholderColor}
         onChange={handleChange}
         value={value}
         autoCorrect={false}
@@ -40,11 +51,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     padding: 12,
     height: 56,
-    backgroundColor: Colors.textInputColor,
-    color: "#FFF",
     borderRadius: 4,
     fontSize: 16,
     letterSpacing: -0.41,
-    fontFamily: "Alata",
+    fontFamily: Fonts.Alata,
   },
 });

@@ -7,19 +7,24 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { useAuth } from "@/hooks/useAuth";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+
+import { authRoute } from "@/api/client";
 import { LoginStatus, LoginType } from "@/types/Types";
 import Loading from "@/components/Loading";
-import client from "@/api/client";
-import { Colors } from "@/constants/Colors";
-import FormField from "@/components/FormField";
-import Button from "@/components/Button";
-import { useErrorHandler } from "@/hooks/useErrorHandler";
-import { useIsUserLogged } from "@/hooks/useUser";
+import FormField from "@/components/ui/FormField";
+import Button from "@/components/ui/Button";
+import { Fonts } from "@/constants/Fonts";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { Routes } from "@/constants/Routes";
 
 const LoginScreen = () => {
   const router = useRouter();
+
+  const backgroundColor = useThemeColor("background");
+  const textColor = useThemeColor("text");
 
   const [inputType, setInputType] = useState<keyof LoginType>("username");
   const [loginInfo, setLoginInfo] = useState<LoginType>({
@@ -32,6 +37,20 @@ const LoginScreen = () => {
     errorMessage: undefined,
   });
 
+  // Check, is user already logged in
+  const { isLogged, isLoading, login } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && isLogged) {
+      router.replace(Routes.PRODUCTS);
+    } else if (!isLoading) {
+      setLoginStatus((prevState) => ({
+        ...prevState,
+        loading: false,
+      }));
+    }
+  }, [isLogged, isLoading, router]);
+
   const screenDimensions = Dimensions.get("screen");
   const position = useSharedValue(0);
 
@@ -43,34 +62,31 @@ const LoginScreen = () => {
     transform: [{ translateX: position.value + screenDimensions.width }],
   }));
 
-  // Check, is user already logged in
-  const { isLogged, isLoading } = useIsUserLogged();
-
-  useEffect(() => {
-    if (!isLoading && isLogged) {
-      router.replace("/products");
-    } else if (!isLoading) {
-      setLoginStatus((prevState) => ({
-        ...prevState,
-        loading: false,
-      }));
-    }
-  }, [isLogged, isLoading, router]);
-
-  const handleInputType = async () => {
+  const handleInputType = async (): Promise<void> => {
     if (inputType === "username" && loginInfo.username.length) {
       setInputType("password");
       position.value = withSpring(-screenDimensions.width);
-    } else {
+      setLoginStatus((prevState) => ({
+        ...prevState,
+        errorMessage: undefined,
+      }));
+    } else if (inputType === "password" && loginInfo.password.length) {
       try {
+        let token: string;
+
         // Login user & get token in response
-        const { data } = await client.post("/auth/login", {
-          username: loginInfo.username,
-          password: loginInfo.password,
-        });
+        const { data }: { data: { token: string } } = await authRoute.post(
+          "/auth/login",
+          {
+            username: loginInfo.username,
+            password: loginInfo.password,
+          },
+        );
+
+        token = data.token;
 
         // Set token for auto login
-        await AsyncStorage.setItem("token", data.token);
+        await login(token);
 
         // Clear inputs
         setLoginInfo({
@@ -85,7 +101,7 @@ const LoginScreen = () => {
         });
 
         // Go to '/products' page
-        return router.push("/products");
+        router.push(Routes.PRODUCTS);
       } catch (error) {
         setLoginStatus({
           loading: false,
@@ -98,8 +114,11 @@ const LoginScreen = () => {
           loading: false,
         }));
       }
-      setInputType("username");
-      position.value = withSpring(0);
+
+      if (loginInfo.password.length) {
+        setInputType("username");
+        position.value = withSpring(0);
+      }
     }
   };
 
@@ -108,8 +127,24 @@ const LoginScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.headerText}>Sign in</Text>
+    <SafeAreaView
+      style={[
+        styles.container,
+        {
+          backgroundColor,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.headerText,
+          {
+            color: textColor,
+          },
+        ]}
+      >
+        Sign in
+      </Text>
       <Animated.View style={[styles.form, usernameStyle]}>
         {inputType === "username" && (
           <FormField
@@ -136,13 +171,22 @@ const LoginScreen = () => {
       <Button
         title="Continue"
         handlePress={handleInputType}
-        isDisabled={
+        disabled={
           (inputType === "username" && !loginInfo.username.length) ||
           (inputType === "password" && !loginInfo.password.length)
         }
       />
 
-      <Text style={styles.errorText}>{loginStatus.errorMessage}</Text>
+      <Text
+        style={[
+          styles.errorText,
+          {
+            color: textColor,
+          },
+        ]}
+      >
+        {loginStatus.errorMessage}
+      </Text>
     </SafeAreaView>
   );
 };
@@ -153,18 +197,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    paddingTop: "25%",
+    paddingTop: 150,
     paddingHorizontal: 23,
-    backgroundColor: Colors.backgroundColor,
   },
   headerText: {
     alignSelf: "flex-start",
     marginLeft: 4,
     marginBottom: 32,
-    color: "#FFF",
     letterSpacing: -0.41,
     fontSize: 32,
-    fontFamily: "Alata",
+    fontFamily: Fonts.Alata,
   },
   form: {
     width: "100%",
@@ -172,13 +214,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
   errorText: {
     width: "100%",
     textAlign: "center",
     marginTop: 10,
     letterSpacing: -0.41,
-    color: "#FFF",
-    fontFamily: "Alata",
+    fontFamily: Fonts.Alata,
     textTransform: "capitalize",
   },
 });
