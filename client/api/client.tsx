@@ -1,7 +1,7 @@
 import { getToken, removeToken } from "@/utils/storage";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-const BASE_URL = "http://192.168.0.110:3000/api/v1";
+const BASE_URL = "http://<your_IPv4>:3000/api/v1";
 
 export const authRoute = axios.create({
   baseURL: BASE_URL,
